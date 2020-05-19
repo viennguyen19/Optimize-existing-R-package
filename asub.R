@@ -1,0 +1,39 @@
+asub <- function(x, idx, dims=seq(len=max(length(dim(x)), 1)), drop=NULL, ...) UseMethod("asub")
+asub.default <- function(x, idx, dims=seq(len=max(length(dim(x)), 1)), drop=NULL, ...) {
+    # Do arbitrary indexing of x as positions in dims
+    if (length(dims)>1 && !is.list(idx))
+        stop("idx must be a list when length dims>1")
+    if (length(list(...)))
+        if (length(names(list(...))))
+            stop('have unrecognized ... arguments for asub.default: ', paste(names(list(...)), collapse=', '))
+        else
+            stop('have unrecognized unnamed ... arguments for asub.default')
+    if (!is.list(idx))
+        idx <- list(idx)
+    if (length(idx) != length(dims))
+        stop("idx has different number of indices than dims")
+    # Construct a skeleton call
+
+    d <- dim(x)
+    if (is.null(d))
+        d <- length(x)
+    if (any(dims < 1 | dims > length(d)))
+        stop("dims out of range")
+
+    shouldShowDrop <- !is.null(drop)
+    shouldDrop <- FALSE
+    if (!is.null(drop)) {
+        shouldDrop <- drop
+    }
+    textToEval <- asubCpp(idx, length(d), as.integer(dims), shouldDrop, shouldShowDrop)
+    # xic <- asubCpp(dims, idx, xic)
+    # return(eval(xic)) # , envir=parent.frame(), enclos=baseenv()))
+    return (eval(parse(text=textToEval)))
+}
+
+# asubCpp <- function(dims, idx, xic) {
+#     for (i in seq(along=dims))
+#         if (!is.null(idx[[i]]))
+#             xic[2+dims[i]] <- idx[i]
+#     xic
+# }
